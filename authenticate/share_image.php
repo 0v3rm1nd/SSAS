@@ -54,6 +54,7 @@ if (isset($_POST['share'])) {
             <p>
                 <a href='main_board.php'><span>main board</span></a>
             </p>
+            
             <div id="footer">
                
             </div>

@@ -58,6 +58,7 @@ if (isset($_POST['com'])) {
             
             <h2> Current comments for <?php echo "$image_name";?></h2>
             <?php require('../includes/list_comments.inc.php');?>
+            
             <div id="footer">
                
             </div>

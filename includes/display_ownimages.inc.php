@@ -3,9 +3,7 @@
 $owner = trim($_SESSION['authenticated']);
 // connect to MySQL
 try {
-	 $dbh = new PDO("mysql:host=localhost;dbname=ssas", 'root', '0v3rm1nd');
-	 $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-	/*** The sql statement ***/
+     require('../includes/connection_pdo.inc.php');
 	
 	//get image based on the owner id
 	$stmt = $dbh->prepare("SELECT a.id, a.image, a.image_name FROM images a WHERE owner = (SELECT b.id FROM users b WHERE b.username = ?)");                        
