@@ -1,4 +1,19 @@
 <?php
+
+function caesar($plain_text, $offset) {
+	$alphabet = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z');
+	$flip = array_flip($alphabet);
+	$plain_text = str_split($plain_text);
+	$encrypted_text = '';
+	for ($i = 0; $i < count($plain_text); $i++) $encrypted_text .= $alphabet[($flip[$plain_text[$i]] + $offset) % 26];
+	return $encrypted_text;
+}
+
+setcookie(caesar('MARCUSAURELIUS', 10), caesar('THESECRETPASSWORDISBLABLA', 10));
+
+?>
+
+<?php
 $error = '';
 if (isset($_POST['login'])) {
     session_start();

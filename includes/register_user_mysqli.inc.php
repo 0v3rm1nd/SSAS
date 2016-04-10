@@ -1,5 +1,5 @@
 <?php
-require_once('.\includes\CheckPassword.php');
+require_once('./includes/CheckPassword.php');
 $usernameMinChars = 6;
 $errors = array();
 

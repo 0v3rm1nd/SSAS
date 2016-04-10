@@ -30,8 +30,11 @@ else
         if($_FILES['userimage']['size'] < $maxsize )
             {
               /*** connect to db ***/
-              $dbh = new PDO("mysql:host=localhost;dbname=ssas", 'root', '0v3rm1nd');
-              $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			  require_once('connection.inc.php');
+              $dbh = dbConnect("write", "PDO");
+			  // new PDO("mysql:host=localhost;dbname=ssas", 'root', '0v3rm1nd');
+
+			  $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
               $stmt = $dbh->prepare("INSERT INTO images (image, image_name, owner) VALUES (? ,?, (SELECT id FROM users WHERE username = ?))");
               
