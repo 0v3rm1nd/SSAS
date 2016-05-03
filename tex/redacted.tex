@@ -1,0 +1,461 @@
+\documentclass{article}
+
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{alltt}
+\usepackage{url}
+\usepackage{tabularx}
+%\usepackage{ngerman}
+\usepackage{longtable}
+\usepackage{color}
+\usepackage{verbatim}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\newenvironment{prettytablex}[1]{\vspace{0.3cm}\noindent\tabularx{\linewidth}{@{\hspace{\parindent}}#1@{}}}{\endtabularx\vspace{0.3cm}}
+\newenvironment{prettytable}{\prettytablex{l X}}{\endprettytablex}
+
+
+
+\title{\huge\sffamily\bfseries System Description and Risk Analysis}
+\author{
+Martin I. Vladkov \\ 
+\small \texttt{mvli@itu.dk} 
+\and 
+Benjamin Hviid \\
+\small \texttt{behn@itu.dk} 
+\and 
+Tobias L. Christiani \\
+\small \texttt{tobc@itu.dk} 
+}
+%\date
+
+
+\begin{document}
+\maketitle
+
+%% please observe the page limit; comment or remove lines below before hand-in
+%\begin{center}
+%{\large\textcolor{red}{Page limit: 30 pages.}}
+%\end{center}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+\pagebreak
+
+
+\section{System Characterization}
+
+\subsection{System Overview}
+
+\paragraph{System mission}
+The system is a photo sharing website that allows users to share images and comment on images.
+The mission of the system is to satisfy certain functionality requirements and security requirements.
+
+\paragraph{System architecture}
+The website is being hosted on a machine running Ubuntu and is accessible through HTTP on port 80.
+The machine is running an Apache web server with support for PHP and a MySQL database.
+The website uses the server-side programming language PHP with user data and images stored in a MySQL database.
+
+
+\subsection{System Functionality}
+With respect to functionality, the site should support the registration as a new user or logging in as an existing user. 
+Users must be able to do the following:
+\begin{enumerate}
+\item Upload pictures. 
+\item Share his own pictures with other named other users on a picture-by-picture basis.
+\item View his own pictures and pictures other has shared with him.
+\item Comment on any picture he can view.
+\item View comments on any picture he can view.
+\end{enumerate}
+The security requirements are:
+\begin{enumerate}
+\item Access control. A user is authorised for his own pictures and photo streams, and photo streams he has joined.
+\item Confidentiality. Only a user authorised for a picture can view, comment or read comments on that picture.
+\item Integrity. No user can modify any picture or comment.
+\item Availability. No unauthorised user can prevent an image or a comment from being shown to authorised users.
+\end{enumerate}
+
+\subsection{Components and Subsystems}
+
+\paragraph{Website files}
+
+The following table lists the files accessed by the user through the web browser.
+
+\begin{table}
+\small
+\begin{center}
+\begin{tabularx}{\textwidth}{llX}
+File & Description & Security details \\ \hline\hline
+index.php & Landing page & Salted password check using PHP's sha1 function, Session-based authentication \\ \hline	
+register.php & Create user & Server side validation, timestamp salt, username must be unique \\	\hline
+main\_board.php & Functionality overview & Authentication check, image upload file size restriction, file extension check \\ \hline	
+share\_image.php & Share images & Authentication check, verify that user owns image being shared \\ \hline 	
+comment\_image.php & Comment, view comments & Authentication check, verify that the user owns image or image is shared with user \\ \hline	\hline
+\end{tabularx}
+\end{center}
+\end{table}
+
+
+\begin{verbatim}
+.:
+authenticate  includes  index.php  register.php  ssas.sql
+
+./authenticate:
+comment_image.php  main_board.php  share_image.php
+
+./includes:
+authenticate_mysqli.inc.php   image_share_status.inc.php
+CheckPassword.php             list_comments.inc.php
+comment_image.inc.php         logout_db.inc.php
+connection.inc.php            connection_pdo.inc.php        
+display_ownimages.inc.php     share_image.inc.php
+display_sharedimages.inc.php  upload_image.inc.php
+session_timeout_db.inc.php
+
+\end{verbatim}
+
+\paragraph{Database}
+The system uses a MySQL database with four tables:
+
+\begin{verbatim}
++----------------+
+| Tables_in_ssas |
++----------------+
+| comments       |
+| image_shares   |
+| images         |
+| users          |
++----------------+
+
+mysql> describe comments;
++---------------+--------------+------+-----+---------+-------+
+| Field         | Type         | Null | Key | Default | Extra |
++---------------+--------------+------+-----+---------+-------+
+| uid           | int(11)      | YES  | MUL | NULL    |       |
+| iid           | int(11)      | YES  | MUL | NULL    |       |
+| image_comment | varchar(255) | YES  |     | NULL    |       |
++---------------+--------------+------+-----+---------+-------+
+
+mysql> describe image_shares;
++----------+---------+------+-----+---------+-------+
+| Field    | Type    | Null | Key | Default | Extra |
++----------+---------+------+-----+---------+-------+
+| owner_id | int(11) | YES  | MUL | NULL    |       |
+| uid      | int(11) | YES  | MUL | NULL    |       |
+| iid      | int(11) | YES  | MUL | NULL    |       |
++----------+---------+------+-----+---------+-------+
+
+mysql> describe images;
++------------+-------------+------+-----+---------+----------------+
+| Field      | Type        | Null | Key | Default | Extra          |
++------------+-------------+------+-----+---------+----------------+
+| id         | int(11)     | NO   | PRI | NULL    | auto_increment |
+| image      | longblob    | NO   |     | NULL    |                |
+| image_name | varchar(50) | YES  |     | NULL    |                |
+| owner      | int(11)     | YES  | MUL | NULL    |                |
++------------+-------------+------+-----+---------+----------------+
+
+mysql> describe users;
++----------+-------------+------+-----+---------+----------------+
+| Field    | Type        | Null | Key | Default | Extra          |
++----------+-------------+------+-----+---------+----------------+
+| id       | int(255)    | NO   | PRI | NULL    | auto_increment |
+| username | varchar(20) | YES  | UNI | NULL    |                |
+| password | varchar(40) | YES  |     | NULL    |                |
+| salt     | int(11)     | YES  |     | NULL    |                |
++----------+-------------+------+-----+---------+----------------+
+\end{verbatim}
+
+\subsection{Installation}
+\begin{enumerate}
+	\item Install Apache, MySQL and PHP using this guide: \url{http://howtoubuntu.org/how-to-install-lamp-on-ubuntu}
+	\item Install the MySQL module for PHP with the following command \texttt{apt-get install php5-mysqlnd}
+	\item Run mysql from the terminal and type source \emph{pathtodatabase.sql} to load the database.
+\end{enumerate}
+
+\begin{comment}
+\subsection{Backdoors}
+
+\paragraph{Easy backdoor}
+On port 5555 we have an echo server that will return the input.
+If the input string is longer than 50 characters it will open a terminal as the root user.
+
+\begin{enumerate}
+	\item Run nmap to discover the echo service running on port 5555
+	\item Run the following command from a terminal to connect: \texttt{nc <ip address> <port>}
+\end{enumerate}
+
+\paragraph{Difficult backdoor}
+The file index.php sends a cookie to the browser containing the credentials of the root user encrypted using Caesar cipher.
+
+\begin{enumerate}
+	\item Navigate to the main page in a browser e.g. Google Chrome
+	\item Press F12 to bring up the developer tools
+	\item Navigate to Resources -- Cookies -- localhost
+	\item The name of the cookie is the password of the root user, encrypted using Caesar cypher +10.
+	\item Decrypt the password by replacing each letter with the one appearing 10 characters earlier in the English alphabet (all caps).
+	\item Use the recovered password to log in to Ubuntu.
+\end{enumerate}
+\end{comment}
+
+\section{Risk Analysis and Security Measures}
+
+\subsection{Assets}
+
+The description of assets for the web service will be divided into two categories; physical assets and logical assets. The former category explains the tangible assets, such as computers and routers, while the latter concerns virtual or intangible assets (i.e. software, data objects and information). 
+
+
+\subsection*{Physical Assets}
+
+\setlist[description]{font=\normalfont\itshape}
+
+\begin{description}
+\item[Virtual host] 
+Computer running Linux on which LAMP (Linux, Apache, MySQL, PHP) is installed. 
+Access to the computer should be restricted to the system administrator. 
+Both physical security precautions, such as locking the room where the computer is located, and digital precautions, 
+i.e. requiring authentication needs to be adhered to.
+ 
+\item[Router] 
+The router to which the virtual host connects to the internet. 
+Like the virtual host, access to the router has to be restricted to prevent an adversary from being able to control the router. 
+
+\item[Server hosting web service] 
+The web service is hosted from a virtual server in a location that we do not have control over. 
+In the event that this server is compromised we need to be able to access the data located on it. 
+Data from client to server should be encrypted and backup solutions of the data is necessary 
+in order to ensure the integrity of the data objects and the availability of the service. 
+ 
+\item[Local backup server]
+We store a copy of the data on a server in the same building as the virtual host. 
+In the event that the web server is unavailable or attacked by an adversary we have fast and easy access to the content on it. 
+Snapshots of the database content must be taken on at least a daily basis.  
+As with the virtual host does this server require a physical lock and user authentication to prevent unauthorized access. 
+Access should only be granted to the system administrator or senior technical support staff. 
+
+\item[Web server storing backups]
+We keep snapshots of the database on a web server in the case that the building housing the virtual host and local backup server is compromised. 
+This server is from a different provider than the server hosting the web service. 
+Snapshots are taken in the same frequency as on the local backup server. 
+
+\end{description}
+	
+\subsection*{Logical Assets}
+
+\subsubsection*{Software}
+This list explains the relevant software assets for the virtual host and router. 
+The state of these assets is described by the frequency of software updates. 
+The ideal state is that the software is up-to-date and changes when a new uninstalled version is available. 
+The frequency of updating the software therefore important. 
+
+\begin{description}
+	\item[Virtual host]
+	The virtual host runs Ubuntu (currently running version 14.04) and only contains a LAMP distribution with Apache, MySQL and PHP. 
+	The computer requires user authentication and is maintained by the system administrator 
+	who ensures that the latest updates are installed on a daily basis. 
+	\item[Router firmware]
+	The firmware of the router is kept up to date by the system administrator or a senior technical staff member. 
+	He or she is also obliged to maintain the firewall software in order to prevent possible exploits 
+	in out-of-date versions of the firmware of firewall software. 
+
+\end{description}
+
+\subsubsection*{Information}
+This section describes the assets in form of data objects that are of value to the web services stakeholders.
+
+
+\begin{description}
+	\item[Images and comments] 
+	The main component of the web service. 
+	Since the web service allows users to share images with each other we need to ensure that only agents 
+	with permission to access the images (and comments attached to those images) may be able to so. 
+	Likewise do we need to prevent users from writing comments to images that they are not authorized to view. 
+	The state space of an image or a comment is the set of agents that have access to view and modify the content. 
+	
+	\item[Username and passwords] 
+	The integrity of the list of usernames and passwords of the web service's userbase should be guaranteed. 
+	The state space consist of the set of people with access to each username and password. 
+	The only item of this set should be the user who created the username and password. 
+	If this set changes the value of the state will significantly decrease.
+\end{description}
+
+%Describe the relevant assets and their required security properties. For example, data objects, access restrictions, configurations, etc.
+
+%Physical assets:
+	% Computer that runs Linux 
+	% Router that connects the computer to the internet
+	% Physical server hosting our web service
+	% Web server that scores our backups
+	% Local backup server 
+	
+% Logical assets 
+	%SOFTWARE:
+	% LAMP -> Apache Server, MySQL, PHP 
+	% Ubuntu operating system 
+	
+	% INFORMATION
+	% Data objects -> images and comments that are accessible to each user. Consider data sensitivity
+	% 
+	% Username and passwords 
+	
+
+% availability of service
+% integrity of data objects in database
+
+
+\subsection{Threat Sources}
+
+We describe and list the most probable and dangerous threat sources and associated threat actions. 
+We perform this limitation as the list of \emph{all} possible threat sources is exhaustive and the risks of many threats are to small. 
+
+\begin{description}
+
+\item[Employees]
+It is careless to assume that your employees will only act in the benefit of the company. 
+Some employees might have malicious intentions and abuse their position to gain access to data that they should not be authorized to. 
+The company therefore needs to consider the \emph{principle of least privilege}. 
+
+\item[Competitors]
+By launching a web service one must expect that companies with competitive products will have an interest 
+in gaining access to the data of this service or perhaps the source code that the service is build upon. 
+Competitors could launch DDoS attacks or hire hackers to bring the site down.
+
+\item[Script kiddies]
+We expect that the threat of script kiddies is proportional to the popularity of the web service. 
+This is because script kiddies may be motivated by the prestige element of hacking and the prestige of 
+successfully hacking a highly popular service is higher than that of a lesser-known product.
+Script kiddies could launch DDoS attacks or attempt SQL injection or cross site scripting.
+
+\item[Hackers]
+A skilled hacker might be hired by one of the other threat sources or 
+could simply be motivated by the fame and glory of hacking our system.
+A skilled hacker could try everything we have learned in the course and more.
+
+\item[Governmental agencies]
+Because the web service contains ways for users to communicate with each other, 
+it remains possible that it can be targeted by a governmental agency. 
+Such agency could be concerned that the web service is used to by people with malicious intent, 
+such as members of terrorist groups. 
+End-to-end encryption of the content could help mitigate this threat. 
+Despite the fact that we consider the possibility of this happening to be low, 
+does the high computational power and skill set of people working in governmental agencies have a high impact on the security of the web service. 
+A government could have their national security agency install backdoors into the software used by the website.
+
+\end{description}
+
+
+% a threat is composed of a threat source and a threat action where the action corresponds to the exploit of vulnerability. 
+
+
+% Employees
+% Competitors 
+% Script kiddies
+% Hackers
+% Governmental agencies
+% 
+% Damage to the building housing the main computer and local server 
+% 
+% Name and describe potential threat sources including their motivation.
+
+\subsection{Risks and Countermeasures}
+Conceptually, the risk of a threat is measured by the following formula.
+
+\begin{equation}
+	\text{Risk} = \text{Likelihood} \times \text{Impact}
+\end{equation}
+
+The following table relates Risk, Likelihood, and Impact. 
+
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\multicolumn{4}{|c|}{{\bf Risk Level}} \\
+\hline
+{{\bf Likelihood}} & \multicolumn{3}{c|}{{\bf Impact}} \\ %\cline{2-4}
+     & Low & Medium & High \\  \hline
+ High & Low & Medium & High  \\
+\hline
+ Medium & Low & Medium & Medium \\
+\hline
+ Low & Low & Low & Low \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Threats}
+
+We list a number of threats to our system along with our assessment of their Likelihood (L), Impact (I), and Risk.
+
+\begin{footnotesize}
+\begin{prettytablex}{lllll}
+No. & Threat & L & I & Risk \\
+\hline
+1 & Weak passwords & {\it High} & {\it High} & {\it High} \\
+\hline
+2 & Password leak & {\it Medium} & {\it High} & {\it Medium} \\
+\hline
+3 & SQL injection & {\it Medium} & {\it High} & {\it Medium} \\
+\hline
+4 & Physical access  & {\it Low} & {\it High} & {\it Low} \\
+\hline
+5 & Social engineering  & {\it Medium} & {\it High} & {\it Medium} \\
+\hline
+6 & Impersonating user  & {\it Medium} & {\it High} & {\it Medium} \\
+\hline
+7 & Unauthorized access to images/comments & {\it Medium} & {\it Medium} & {\it Medium} \\
+\hline
+8 & DDoS & {\it Medium} & {\it Medium} & {\it Medium} \\
+\hline
+9 & Natural disasters & {\it Low} & {\it High} & {\it Low} \\
+\hline
+
+\end{prettytablex}
+\end{footnotesize}
+
+\subsubsection{Countermeasures}
+
+The countermeasures to the above threats are listed here, along with an updated risk assessment.
+
+\begin{footnotesize}
+\begin{prettytablex}{lllll}
+No. & Countermeasure & L & I & Risk \\
+\hline
+1 & Server-side validation & {\it Low} & {\it High} & {\it Low} \\
+\hline
+2 & SHA1 + SALT & {\it Low} & {\it High} & {\it Low} \\
+\hline
+3 & PHP trim & {\it Low} & {\it High} & {\it Low} \\
+\hline
+4 & Root password  & {\it Medium} & {\it High} & {\it Medium} \\
+\hline
+5 & Employee awareness & {\it Low} & {\it High} & {\it Low} \\
+\hline
+6 & PHP Session auth.  & {\it Low} & {\it High} & {\it Low} \\
+\hline
+7 & User auth. check & {\it Low} & {\it Medium} & {\it Low} \\
+\hline
+8 & - & {\it Medium} & {\it Medium} & {\it Medium} \\
+\hline
+9 & - & {\it Low} & {\it High} & {\it Low} \\
+\hline
+\end{prettytablex}
+\end{footnotesize}
+
+\subsubsection{Risk Acceptance}
+
+Two risks remain after the countermeasures: Physical access and DDoS attacks. 
+
+\paragraph{Physical access}
+The risk of physical access is quite high. 
+We have implemented a strong root password, but a dedicated attacker with physical access can still just copy the disk and inspect it. 
+Further countermeasures include encrypting the machine or placing it in a phyiscally secure location such as a locked server room. 
+
+\paragraph{DDoS}
+Distributed Denial of Service (DDoS) attacks are difficult to protect against.
+Countermeasures include specialized hardware that blocks attackers, 
+or increasing capacity to make it more difficult for an attacker to deny other users access.
+
+\end{document}
+
+
