@@ -5,7 +5,7 @@
 \usepackage{url}
 %\usepackage{ngerman}
 \usepackage{color}
-
+\usepackage{verbatim}
 
 \title{\huge\sffamily\bfseries Review of Group a by Group b}
 \author{ w \and x \and y \and z}
@@ -53,16 +53,51 @@ Investigate the system. Are the countermeasures implemented as described? Do you
 
 
 \subsection{Backdoors}
+During our search for backdoors we tried a long list of different things such as injection attacks, port scans, 
+issuing arbitrary commands to services running on the host, inspecting the source code, inspecting cookies etc. 
+In the following we only mention the results we found to be interesting.
 
-Describe all backdoors found on the system. 
-It may be that you also find unintended backdoors, which cannot be distinguished from intentionally added backdoors.
+The system came with a unix user \texttt{scottiiiie} that did not have a password (empty string password).
+This user granted us access to read the file system which allowed us to further compromise the system as detailed below.
 
+\paragraph{Comparing sources}
+By comparing the source of the website installed on the server with the redacted source code we were able to discover the database user credentials and other sensitive information (app key).
+\begin{verbatim}
+APP_ENV=production
+APP_DEBUG=false
+APP_KEY=base64:Nz3VKZiC4LunJs6Rn60g4vfAOv52FcvNE9dAX6jxW8s=
+APP_URL=http://localhost
+
+DB_CONNECTION=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_DATABASE=scottiiiie
+DB_USERNAME=scottiiiie
+DB_PASSWORD=supersecurepassword
+\end{verbatim}
+
+\paragraph{Compromising the database}
+With root access to the database we were able to impersonate other users.
+This was done by overwriting the hashes of the passwords of passwords of existing users with a hash of a known password.
+Example of overwriting the password of user 4 with the password of user 7.
+\begin{verbatim}
+UPDATE users us,
+(SELECT password FROM users WHERE id=7) u 
+SET us.password=u.password WHERE id=4
+\end{verbatim}
+Unfortunately, the database did not seem to contain information that would lead to root access.
+
+\paragraph{Heartbleed}
+A port scan revealed an SSH service running on port 28531. 
+The version of SSH was deprecated and vulnerable to the heartbleed bug.
+The SSH settings file did not appear to reveal anything out of the ordinary.
 
 
 \subsection{Comparison}
-
-Compare your system with the external system you were given for the
-review.   Are there any remarkable highlights in your system or the external system?
+The main difference between the external system and our system is the use of a web-development framework in the external system.
+As mentioned in the system report, the benefit of using a popular open source framework is that it is likely that a lot of effort has gone into securing and testing the system.  
+The downside is that the system becomes more complicated and difficult to audit compared to a solution such as ours.
+One main benefit of the external system compared to ours is that they have protection against cross site scripting attacks.
 
 
 \end{document}
