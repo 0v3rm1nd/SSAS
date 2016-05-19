@@ -7,9 +7,9 @@
 \usepackage{color}
 \usepackage{verbatim}
 
-\title{\huge\sffamily\bfseries Review of Group a by Group b}
-\author{ w \and x \and y \and z}
-\date{\dots}
+\title{\huge\sffamily\bfseries Review of Group T by Group K}
+\author{ Martin Ivanov \and Tobias Christiani  \and Benjamin Hviid}
+\date{19.05.2016}
 
 
 \begin{document}
@@ -30,13 +30,20 @@
 
 \subsection{Background}
 
-\noindent {\bf Developers of the external system:} {\it x', y', z', ...} \\
+\noindent {\bf Developers of the external system:} {\it Charlotte Amalie Qvist (chqv@itu.dk), Martin Hansen (marha@itu.dk), Christos Grigoriou (chgr@itu.dk), Dimos Zikos (dizi@itu.dk), Eiler KaNid YodlaOng Poulsen (eipo@itu.dk), Jonathan Emil Højtoft (jemh@itu.dk)} \\
 
-\noindent {\bf Date of the review:} ...
+\noindent {\bf Date of the review:} 19.05.2016
 
 \subsection{Completeness in Terms of Functionality} 
 
-Does the system meet the requirements given in the assignment? If not, list any missing functionality.
+The system correctly meets all functional requirements:
+\begin{description}
+    \item $\bullet$ Upload pictures
+    \item $\bullet$ Share pictures with other users
+    \item $\bullet$ View own pictures and pictures shared with you
+    \item $\bullet$ Comment on any picture you can view
+    \item $\bullet$ View comments on any picture you can view
+\end{description}
 
 
 \subsection{Architecture and Security Concepts}
@@ -49,8 +56,18 @@ countermeasures appropriate?
 
 \subsection{Implementation}
 
-Investigate the system. Are the countermeasures implemented as described? Do you see security problems?
+The system is very well hardened and has mediation on the most popular security attacks and overall follows strict security principles.
 
+\begin{description}
+\item $\bullet$ SQL injection – we tried to inject statements from all open input fields without any success. This verifies their use of prepared statements to mitigate the SQL injection risk.
+\item $\bullet$ HTML code injection – the idea is to upload HTML code from an input field. This was also successfully mitigated via input sanitation.
+\item $\bullet$ Brute-force attack – the system has a 10 character password policy that also requires an uppercase, lowercase and a number/symbol. This makes it really difficult to attempt any brute force attack as it will take an unfeasible amount of time to try out all possible combinations.
+\item $\bullet$ Cross-site request forgery – mitigated via token generation for each separate user session
+\end{description}
+
+Furthermore the thread acceptance is also correctly explained. The use of a self-signed SSL is not ideal as it is not being authorized via an external CA which automatically makes it a not trusted certificate in a production environment. The DoS attack acceptance is also noted as it is usually very difficult to prevent such attacks. Their suggestion to use reverse proxy servers between the client and the web server which could lower the risk of a small scale DoS attack being successful. 
+\newline
+Overall the system is hardened accordingly following the security principles of compartmentalization, leas privileges, generating secrets, simplicity and open design. We were not able to find an exploit in their mitigation techniques and the only vulnerabilities we were able to spot were the actual backdoors.
 
 \subsection{Backdoors}
 During our search for backdoors we tried a long list of different things such as injection attacks, port scans, 
@@ -86,12 +103,6 @@ UPDATE users us,
 SET us.password=u.password WHERE id=4
 \end{verbatim}
 Unfortunately, the database did not seem to contain information that would lead to root access.
-
-\paragraph{Heartbleed}
-A port scan revealed an SSH service running on port 28531. 
-The version of SSH was deprecated and vulnerable to the heartbleed bug.
-The SSH settings file did not appear to reveal anything out of the ordinary.
-
 
 \subsection{Comparison}
 The main difference between the external system and our system is the use of a web-development framework in the external system.
