@@ -48,11 +48,18 @@ The system correctly meets all functional requirements:
 
 \subsection{Architecture and Security Concepts}
 
-Study the documentation that came with the external system and
-evaluation.
-Is the chosen architecture well suited for the tasks specified in the 
-requirements?  Is the risk analysis coherent and complete?   Are the
-countermeasures appropriate?
+Team T has provided a very extensive documentation detailing their system setup and security measures. 
+
+As opposed to our solution do Team T use a PHP framework, Laravel. This handle prepared statements as well dependency management. Lavarel adds another layer of security to their platform, partly because they dont have to consider sanitizing user input when they take advantage of prepared statement, but also because the framework provide a several security solutions---such as hashing, encryption, authentication etc---that they do not have to implement themselves. The chance that some weakness arise when coding these security measures from scratch is much likely higher than if you simply rely on an existing and proven framework. 
+
+They have further taken good care against exposing the images to potential adversaries by not storing images in the public folder and only keeping the images as longblobs in the image table. 
+
+\subsubsection{Risk Analysis}
+For the description of Information Assets it would be interesting to know what kind of confidential information they describe. The only example given is passwords. Further does the section not contain any information about other kinds of assets, such as logical or physical assets. 
+
+The team have considered a wide range of threat sources and provide an adequate description about the most technical threats. We do, however consider the risk calculation of SQL injection and HTML code in an input field to be inaccurate. While the impact of those match their estimate, do we believe that the likelihood of those happening are both either medium or high. A reason for this would be the vast amount of so-called \emph{script kiddies} who you could expect considering such approaches in lack of understanding more sophisticated attacks. 
+
+The risk of s man-in-the-middle attack or DoS attack are accepted. Given the low impact of being hit by a DoS attack and the fact that there is no reasonable substitutes for a self-signed certificates within the scope of this assignment, both risk acceptances appear reasonable. 
 
 \subsection{Implementation}
 
